@@ -1,0 +1,112 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0e1117;
+  color: #f5f7fa;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #242832;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+input::placeholder {
+  color: #8b93a1;
+}
+
+button {
+  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #756bff;
+  outline-offset: 2px;
+}
+
+/* ---------- responsive layout rules ---------- */
+.sidebar-desktop-wrap {
+  display: block;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sidebar-desktop-wrap {
+    display: none;
+  }
+  .mobile-overlay {
+    display: block;
+  }
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+  .username-label {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .balance-card-wrap {
+    display: none;
+  }
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 1280px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .feedback-card {
+    flex-basis: calc((100% - 14px) / 2) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+  .feedback-card {
+    flex-basis: 100% !important;
+  }
+}
