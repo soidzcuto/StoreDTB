@@ -89,7 +89,8 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
   const isOutOfStock = product.status === "out" || stockCount === 0;
 
   // Tính toán tiền
-  const subtotal = unitPrice * quantity;
+  const currentQuantity = quantity === '' ? 0 : parseInt(quantity) || 0;
+  const subtotal = unitPrice * currentQuantity;
   let discountAmount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.type === "percent") {
@@ -100,7 +101,7 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
   }
   const totalAmount = Math.max(0, subtotal - discountAmount);
   const remainingBalance = balance - totalAmount;
-  const isBalanceSufficient = remainingBalance >= 0;
+  const isBalanceSufficient = remainingBalance >= 0 && currentQuantity > 0;
 
   // Lấy ảnh & tính năng từ CSDL
   const imageUrl = product.image_url || product.image || "";
@@ -162,6 +163,7 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
 
       // 1. Lấy key từ bảng product_keys trong CSDL theo sản phẩm và gói đã chọn
       let claimedKeys = [];
+      const finalQuantity = quantity === '' ? 1 : parseInt(quantity) || 1;
       try {
         claimedKeys = await claimProductKeys({
           productId: product.id,
@@ -170,7 +172,7 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
           packageName: currentPkg.name,
           userId: user.id,
           orderId: orderId,
-          quantity: quantity,
+          quantity: finalQuantity,
         });
       } catch (err) {
         console.warn("Không thể claim key từ bảng product_keys:", err);
@@ -178,7 +180,7 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
 
       // Nếu số key có sẵn trong CSDL ít hơn số lượng đặt mua, tự sinh key ngẫu nhiên bù vào
       const finalKeys = Array.isArray(claimedKeys) ? [...claimedKeys] : [];
-      while (finalKeys.length < quantity) {
+      while (finalKeys.length < finalQuantity) {
         finalKeys.push(generateRandomKey(isTokenProduct ? "TKN" : "GS"));
       }
       const productKeyString = finalKeys.join("\n");
@@ -192,7 +194,7 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
         id: orderId,
         user_id: user.id,
         product_name: product.name,
-        package_name: `${currentPkg.name}${quantity > 1 ? ` (x${quantity})` : ""}${
+        package_name: `${currentPkg.name}${finalQuantity > 1 ? ` (x${finalQuantity})` : ""}${
           appliedCoupon ? ` [Mã: ${appliedCoupon.code}]` : ""
         }`,
         product_type: isTokenProduct ? "token" : "key",
@@ -215,7 +217,7 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
         user_id: user.id,
         type: "purchase",
         title: product.name,
-        subtitle: `${currentPkg.name} • x${quantity}`,
+        subtitle: `${currentPkg.name} • x${finalQuantity}`,
         time: timeStr,
         amount: -totalAmount,
         balance_after: newBalance,
@@ -796,15 +798,27 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
                         -
                       </button>
                       <input
-                        type="number"
-                        min="1"
-                        max={maxStock}
+                        type="text"
+                        inputMode="numeric"
                         value={quantity}
                         disabled={isOutOfStock}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 1;
-                          setQuantity(Math.max(1, Math.min(maxStock, val)));
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          if (val === '') {
+                            setQuantity('');
+                          } else {
+                            const num = parseInt(val);
+                            if (num <= maxStock) {
+                              setQuantity(num);
+                            }
+                          }
                         }}
+                        onBlur={(e) => {
+                          if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                            setQuantity(1);
+                          }
+                        }}
+                        placeholder="1"
                         className="quantity-input"
                         style={{
                           width: "50px",
@@ -973,7 +987,7 @@ export default function PurchaseModal({ product, isOpen, onClose }) {
                   {/* Số lượng */}
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#8B95A8" }}>Số lượng:</span>
-                    <span style={{ color: "#FFFFFF", fontWeight: 700 }}>{quantity}</span>
+                    <span style={{ color: "#FFFFFF", fontWeight: 700 }}>{currentQuantity}</span>
                   </div>
 
                   {/* Giảm giá nếu có */}
